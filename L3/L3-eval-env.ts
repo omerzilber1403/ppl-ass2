@@ -65,7 +65,7 @@ const applyClass = (proc: ClassT, args: Value[]): Result<ObjectT> => {
     }
     const fieldNames = proc.fields.map(f => f.var);
     const objectEnv = makeExtEnv(fieldNames, args, proc.env);
-    return makeOk(makeObjectT(proc.fields, proc.methods, objectEnv));
+    return makeOk(makeObjectT(proc.methods, objectEnv));
 }
 
 const applyObject = (proc: ObjectT, args: Value[]): Result<Value> => {

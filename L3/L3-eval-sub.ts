@@ -71,7 +71,7 @@ const applyClass = (proc: ClassT, args: Value[]): Result<ObjectT> => {
     const substitutedMethods = proc.methods.map(b => 
         makeBinding(b.var.var, substitute([b.val], fieldNames, litArgs)[0])
     );
-    return makeOk(makeObjectT(proc.fields, substitutedMethods, makeEmptyEnvEnv()));
+    return makeOk(makeObjectT(substitutedMethods, makeEmptyEnvEnv()));
 }
 
 const applyObject = (proc: ObjectT, args: Value[], env: Env): Result<Value> => {

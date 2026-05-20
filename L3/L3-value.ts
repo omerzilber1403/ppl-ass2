@@ -41,12 +41,11 @@ export const isClassT = (x: any): x is ClassT => x.tag === "Class";
 
 export type ObjectT = {
     tag: "Object";
-    fields: VarDecl[];
     methods: Binding[];
     env: Env;
 }
-export const makeObjectT = (fields: VarDecl[], methods: Binding[], env: Env): ObjectT =>
-    ({tag: "Object", fields: fields, methods: methods, env: env});
+export const makeObjectT = (methods: Binding[], env: Env): ObjectT =>
+    ({tag: "Object", methods: methods, env: env});
 export const isObjectT = (x: any): x is ObjectT => x.tag === "Object";
 
 // ========================================================
