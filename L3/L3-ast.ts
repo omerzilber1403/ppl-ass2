@@ -29,6 +29,7 @@ import { Sexp, Token } from "s-expression";
 ;;         |  <boolean>                     / BoolExp(val:boolean)
 ;;         |  <string>                      / StrExp(val:string)
 ;;         |  ( lambda ( <var>* ) <cexp>+ ) / ProcExp(args:VarDecl[], body:CExp[]))
+;;         |  ( class ( <var>+ ) ( <binding>+ ) ) / ClassExp(fields:VarDecl[], methods:Binding[]))
 ;;         |  ( if <cexp> <cexp> <cexp> )   / IfExp(test: CExp, then: CExp, alt: CExp)
 ;;         |  ( let ( binding* ) <cexp>+ )  / LetExp(bindings:Binding[], body:CExp[]))
 ;;         |  ( quote <sexp> )              / LitExp(val:SExp)
@@ -121,7 +122,7 @@ export const isAtomicExp = (x: any): x is AtomicExp =>
     isNumExp(x) || isBoolExp(x) || isStrExp(x) ||
     isPrimOp(x) || isVarRef(x);
 export const isCompoundExp = (x: any): x is CompoundExp =>
-    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x);
+    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x) || isClassExp(x);
 export const isCExp = (x: any): x is CExp =>
     isAtomicExp(x) || isCompoundExp(x);
 
@@ -235,10 +236,16 @@ const parseProcExp = (vars: Sexp, body: Sexp[]): Result<ProcExp> =>
     makeFailure(`Invalid vars for ProcExp ${format(vars)}`);
 
 const parseClassExp = (fields: Sexp, methods: Sexp): Result<ClassExp> =>
-    isArray(fields) && allT(isString, fields) && isGoodBindings(methods) ?
+    isArray(fields) && allT(isIdentifier, fields) && isGoodClassBindings(methods) ?
         bind(mapResult(parseL3CExp, map(second, methods)), (vals: CExp[]) =>
             makeOk(makeClassExp(map(makeVarDecl, fields), zipWith(makeBinding, map(b => b[0], methods), vals)))) :
         makeFailure(`Invalid fields or methods for ClassExp`);
+
+const isGoodClassBindings = (bindings: Sexp): bindings is [string, Sexp][] =>
+    isArray(bindings) &&
+    allT((binding: Sexp): binding is [string, Sexp] =>
+        isArray(binding) && binding.length === 2 && isIdentifier(binding[0]),
+        bindings);
 
 const isGoodBindings = (bindings: Sexp): bindings is [string, Sexp][] =>
     isArray(bindings) &&
