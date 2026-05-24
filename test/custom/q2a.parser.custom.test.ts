@@ -20,13 +20,6 @@ const expectParseFailure = (x: string): void => {
 };
 
 describe("Q2A parser custom grader checks", () => {
-    it("parses and unparses a class with no fields", () => {
-        expect(parseUnparseExp(`
-            (class ()
-                ((answer (lambda () 42))))
-        `)).toStrictEqual(makeOk(`(class () ((answer (lambda () 42))))`));
-    });
-
     it("parses and unparses parameterized methods", () => {
         expect(parseUnparseExp(`
             (class (x y)
@@ -65,6 +58,10 @@ describe("Q2A parser custom grader checks", () => {
         expectParseFailure(`(class x ((get (lambda () x))))`);
     });
 
+    it("rejects empty fields", () => {
+        expectParseFailure(`(class () ((answer (lambda () 42))))`);
+    });
+
     it("rejects non-identifier fields", () => {
         expectParseFailure(`(class (x 1) ((get (lambda () x))))`);
     });
@@ -79,6 +76,10 @@ describe("Q2A parser custom grader checks", () => {
 
     it("rejects empty method bindings without throwing", () => {
         expectParseFailure(`(class (x) (()))`);
+    });
+
+    it("rejects empty methods", () => {
+        expectParseFailure(`(class (x) ())`);
     });
 
     it("rejects method bindings missing a value without throwing", () => {

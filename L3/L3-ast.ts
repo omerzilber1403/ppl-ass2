@@ -236,13 +236,13 @@ const parseProcExp = (vars: Sexp, body: Sexp[]): Result<ProcExp> =>
     makeFailure(`Invalid vars for ProcExp ${format(vars)}`);
 
 const parseClassExp = (fields: Sexp, methods: Sexp): Result<ClassExp> =>
-    isArray(fields) && allT(isIdentifier, fields) && isGoodClassBindings(methods) ?
+    isArray(fields) && fields.length > 0 && allT(isIdentifier, fields) && isGoodClassBindings(methods) ?
         bind(mapResult(parseL3CExp, map(second, methods)), (vals: CExp[]) =>
             makeOk(makeClassExp(map(makeVarDecl, fields), zipWith(makeBinding, map(b => b[0], methods), vals)))) :
         makeFailure(`Invalid fields or methods for ClassExp`);
 
 const isGoodClassBindings = (bindings: Sexp): bindings is [string, Sexp][] =>
-    isArray(bindings) &&
+    isArray(bindings) && bindings.length > 0 &&
     allT((binding: Sexp): binding is [string, Sexp] =>
         isArray(binding) && binding.length === 2 && isIdentifier(binding[0]),
         bindings);
