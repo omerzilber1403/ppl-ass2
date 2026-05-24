@@ -70,7 +70,7 @@ const applyClass = (proc: ClassT, args: Value[]): Result<ObjectT> => {
 
 const applyObject = (proc: ObjectT, args: Value[]): Result<Value> => {
     if (args.length === 0) {
-        return makeFailure(`No method name supplied: ${format(proc)}`);
+        return makeFailure("No method name supplied: Object");
     }
     const methodNameValue = args[0];
     if (!isSymbolSExp(methodNameValue)) {
@@ -81,10 +81,12 @@ const applyObject = (proc: ObjectT, args: Value[]): Result<Value> => {
     if (!methodBinding) {
         return makeFailure(`Unrecognized method: ${methodName}`);
     }
-    
+    const methodArgs = args.slice(1);
     // Evaluate the method to a closure (or something callable) and apply it to remaining arguments
     return bind(applicativeEval(methodBinding.val, proc.env), (methodVal: Value) =>
-        applyProcedure(methodVal, args.slice(1)));
+        isClosure(methodVal) && methodArgs.length !== methodVal.params.length ?
+            makeFailure(`Wrong number of arguments to method ${methodName}, expected ${methodVal.params.length} but got ${methodArgs.length}`) :
+            applyProcedure(methodVal, methodArgs));
 }
 
 const applyClosure = (proc: Closure, args: Value[]): Result<Value> => {
@@ -106,7 +108,15 @@ const evalCExps = (first: Exp, rest: Exp[], env: Env): Result<Value> =>
 // Eval a sequence of expressions when the first exp is a Define.
 // Compute the rhs of the define, extend the env with the new binding
 // then compute the rest of the exps in the new env.
+const evalDefineClass = (def: DefineExp, classExp: ClassExp, exps: Exp[], env: Env): Result<Value> => {
+    const classVal = makeClassT(classExp.fields, classExp.methods, env);
+    const classEnv = makeExtEnv([def.var.var], [classVal], env);
+    classVal.env = classEnv;
+    return evalSequence(exps, classEnv);
+};
+
 const evalDefineExps = (def: DefineExp, exps: Exp[], env: Env): Result<Value> =>
+    isClassExp(def.val) ? evalDefineClass(def, def.val, exps, env) :
     bind(applicativeEval(def.val, env), (rhs: Value) => 
             evalSequence(exps, makeExtEnv([def.var.var], [rhs], env)));
 

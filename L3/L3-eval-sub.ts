@@ -76,7 +76,7 @@ const applyClass = (proc: ClassT, args: Value[]): Result<ObjectT> => {
 
 const applyObject = (proc: ObjectT, args: Value[], env: Env): Result<Value> => {
     if (args.length === 0) {
-        return makeFailure(`No method name supplied: ${format(proc)}`);
+        return makeFailure("No method name supplied: Object");
     }
     const methodNameValue = args[0];
     if (!isSymbolSExp(methodNameValue)) {
@@ -87,9 +87,11 @@ const applyObject = (proc: ObjectT, args: Value[], env: Env): Result<Value> => {
     if (!methodBinding) {
         return makeFailure(`Unrecognized method: ${methodName}`);
     }
-    
+    const methodArgs = args.slice(1);
     return bind(L3applicativeEval(methodBinding.val, env), (methodVal: Value) =>
-        L3applyProcedure(methodVal, args.slice(1), env));
+        isClosure(methodVal) && methodArgs.length !== methodVal.params.length ?
+            makeFailure(`Wrong number of arguments to method ${methodName}, expected ${methodVal.params.length} but got ${methodArgs.length}`) :
+            L3applyProcedure(methodVal, methodArgs, env));
 }
 
 // Applications are computed by substituting computed
